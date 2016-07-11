@@ -60,14 +60,14 @@ open class AppService @Autowired constructor(val restService: RestService) {
       relationships: List<PatientRelationship>,
       profiles: List<PatientProfile>)
       : UserRelationships {
-    val patientsByRelationship = groupRelationships(customerId, relationships)
+    val relationshipsGroupedByManaged = groupRelationshipsByManaged(customerId, relationships)
 
-    val managedRelationships = patientsByRelationship[true]?.map {
+    val managedRelationships = relationshipsGroupedByManaged[true]?.map {
       val profile = getMatchingProfile(customerId, profiles)
       mapToUserRelationship(it, profile!!)
     } ?: listOf()
 
-    val caregiverRelationships = patientsByRelationship[false]?.map {
+    val caregiverRelationships = relationshipsGroupedByManaged[false]?.map {
       val profile = getMatchingProfile(customerId, profiles)
       mapToUserRelationship(it, profile!!)
     } ?: listOf()
@@ -75,12 +75,12 @@ open class AppService @Autowired constructor(val restService: RestService) {
     return UserRelationships(accountInfo, managedRelationships, caregiverRelationships)
   }
 
-  private fun groupRelationships(customerId: String, relationships: List<PatientRelationship>)
+  private fun groupRelationshipsByManaged(customerId: String, relationships: List<PatientRelationship>)
       : Map<Boolean, List<PatientRelationship>> =
       relationships.groupBy { it.customerId == customerId }
 
   private fun mapToUserRelationship(relationship: PatientRelationship, profile: PatientProfile) =
-      UserRelationship(profile, relationship)
+      UserRelationship(relationship, profile)
 
   private fun getMatchingProfile(customerId: String, profiles: List<PatientProfile>) =
       profiles.find { it.patientNumber == customerId }

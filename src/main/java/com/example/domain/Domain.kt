@@ -9,7 +9,7 @@ class PatientRelationship(
     val patientNumber: String,
     val active: Boolean)
 
-class UserRelationship(val profile: PatientProfile, val relationship: PatientRelationship)
+class UserRelationship(val relationship: PatientRelationship, val profile: PatientProfile)
 
 class UserRelationships(
     val accountInfo: AccountInfo,
