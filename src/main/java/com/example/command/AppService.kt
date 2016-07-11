@@ -12,10 +12,10 @@ open class AppService @Autowired constructor(val restService: RestService) {
       toUserRelationships(customerId, restService.getManagedRelationships(customerId))
 
   fun getActiveManagedRelationships(customerId: String) =
-      toUserRelationships(customerId, _getActiveManagedRelationships(customerId))
+      toUserRelationships(customerId, getActiveManagedPatientRelationships(customerId))
 
   fun getUserRelationships(customerId: String) =
-      toUserRelationships(customerId, getAllRelationships(customerId))
+      toUserRelationships(customerId, getAllPatientRelationships(customerId))
 
   fun toUserRelationships(customerId: String, relationships: Observable<List<PatientRelationship>>)
       : UserRelationships =
@@ -27,14 +27,14 @@ open class AppService @Autowired constructor(val restService: RestService) {
           .toBlocking()
           .first()
 
-  private fun getAllRelationships(customerId: String) =
+  private fun getAllPatientRelationships(customerId: String) =
       Observable.merge(
           restService.getManagedRelationships(customerId),
           restService.getCaregiverRelationships(customerId))
           .toList()
           .map { it.flatten() }
 
-  private fun _getActiveManagedRelationships(customerId: String) =
+  private fun getActiveManagedPatientRelationships(customerId: String) =
       restService.getManagedRelationships(customerId)
           .flatMap { Observable.from(it) }
           .filter { it.active }
