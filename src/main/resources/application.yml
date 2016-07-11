@@ -1,0 +1,3 @@
+server:
+  context-path: /kotlin-rx-test
+  port: 10000

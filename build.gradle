@@ -1,0 +1,82 @@
+buildscript {
+  ext.kotlin_version = '1.0.3'
+  ext {
+    springBootVersion = '1.3.6.RELEASE'
+  }
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath 'se.transmode.gradle:gradle-docker:1.2'
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'eclipse'
+apply plugin: 'spring-boot'
+apply plugin: 'docker'
+
+jar {
+  baseName = 'kotlin-rx-test'
+  version = '0.0.1-SNAPSHOT'
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  compile('org.springframework.boot:spring-boot-starter-actuator')
+//	compile('org.springframework.boot:spring-boot-starter-aop')
+//	compile('org.springframework.cloud:spring-cloud-starter-aws')
+//	compile('org.springframework.cloud:spring-cloud-starter-aws-messaging')
+//	compile('org.springframework.boot:spring-boot-starter-data-rest')
+//	compile('org.springframework.boot:spring-boot-starter-hateoas')
+//  compile('io.ratpack:ratpack-spring-boot:1.1.1')
+  compile "org.springframework.boot:spring-boot-starter-web:1.4.0.RC1"
+  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  compile 'io.reactivex:rxkotlin:0.60.0'
+
+  testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+//  testCompile 'org.jetbrains.spek:spek:1.0.25'
+}
+
+repositories {
+  mavenCentral()
+  maven {
+    url 'https://repo.spring.io/libs-milestone'
+  }
+  maven {
+    url "http://repository.jetbrains.com/all"
+  }
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.SR2"
+  }
+}
+
+eclipse {
+  classpath {
+    containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+    containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
+  }
+}
+sourceSets {
+  main.java.srcDirs += 'src/main/kotlin'
+}
+
+task buildDocker(type: Docker) {
+  baseImage = 'frolvlad/alpine-oraclejdk8:slim'
+  push = project.hasProperty('push')
+  addFile {
+    from jar
+    rename {'app.jar'}
+  }
+  entryPoint(['java', '-Djava.security.egd=file:/dev/./urandom', '-jar', '/app.jar'])
+  exposePort(10000)
+}
+
+buildDocker.dependsOn(build)
