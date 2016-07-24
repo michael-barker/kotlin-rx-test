@@ -5,16 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@RestController
+@RestController("relationships")
 class RelationshipController @Autowired constructor(val appService: AppService) {
 
-    @RequestMapping(value = "relationships")
+    @RequestMapping
     fun getRelationships() = appService.getUserRelationships("1111")
 
-    @RequestMapping(value = "relationships/managed/active")
+    @RequestMapping(value = "managed/active")
     fun getActiveManagedRelationships() = appService.getActiveManagedUserRelationships("1111")
 
-    @RequestMapping(value = "relationships/managed")
+    @RequestMapping(value = "managed")
     fun getManagedRelationships() = appService.getManagedUserRelationships("1111")
 
 }
