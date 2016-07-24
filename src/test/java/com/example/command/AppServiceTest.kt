@@ -22,4 +22,20 @@ open class AppServiceTest() {
     assert(userRelationships.caregiverRelationships.size == 1)
   }
 
+  @Test
+  fun getActiveManagedRelationships() {
+    val userRelationships = appService.getActiveManagedUserRelationships("1111")
+
+    assert(userRelationships.managedRelationships.size == 2)
+    assert(userRelationships.caregiverRelationships.size == 0)
+  }
+
+  @Test
+  fun getManagedRelationships() {
+    val userRelationships = appService.getManagedUserRelationships("1111")
+
+    assert(userRelationships.managedRelationships.size == 3)
+    assert(userRelationships.caregiverRelationships.size == 0)
+  }
+
 }

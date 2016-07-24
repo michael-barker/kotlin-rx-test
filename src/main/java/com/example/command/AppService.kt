@@ -1,6 +1,9 @@
 package com.example.command
 
-import com.example.domain.*
+import com.example.domain.AccountInfo
+import com.example.domain.PatientProfile
+import com.example.domain.UserRelationship
+import com.example.domain.UserRelationships
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import rx.Observable
@@ -8,79 +11,64 @@ import rx.Observable
 @Service
 open class AppService @Autowired constructor(val restService: RestService) {
 
-  fun getManagedRelationships(customerId: String) =
-      toUserRelationships(customerId, restService.getManagedRelationships(customerId))
+  fun getManagedUserRelationships(customerId: String) =
+      toUserRelationships(
+          getAccountInfo(customerId),
+          getManagedRelationships(customerId),
+          emptyUserRelationshipList())
 
-  fun getActiveManagedRelationships(customerId: String) =
-      toUserRelationships(customerId, getActiveManagedPatientRelationships(customerId))
+  private fun emptyUserRelationshipList() = Observable.just(listOf<UserRelationship>()).flatMap { Observable.from(it) }
+
+  fun getActiveManagedUserRelationships(customerId: String) =
+      toUserRelationships(
+          getAccountInfo(customerId),
+          getActiveManagedRelationships(customerId),
+          emptyUserRelationshipList())
 
   fun getUserRelationships(customerId: String) =
-      toUserRelationships(customerId, getAllPatientRelationships(customerId))
+      toUserRelationships(
+          getAccountInfo(customerId),
+          getManagedRelationships(customerId),
+          getCaregivers(customerId))
 
-  fun toUserRelationships(customerId: String, relationships: Observable<List<PatientRelationship>>)
+  private fun toUserRelationships(
+      accountInfo: Observable<AccountInfo>,
+      managedRelationships: Observable<UserRelationship>,
+      caregivers: Observable<UserRelationship>)
       : UserRelationships =
-      relationships.flatMap { zipWithProfilesAndAccountInfo(customerId, it) }
-          .map {
-            val (relations, profiles, accountInfo) = it
-            toUserRelationships(customerId, accountInfo, relations, profiles)
-          }
+      Observable.zip(
+          accountInfo,
+          managedRelationships.toList(),
+          caregivers.toList(),
+          ::UserRelationships)
           .toBlocking()
           .first()
 
-  private fun getAllPatientRelationships(customerId: String) =
-      Observable.merge(
-          restService.getManagedRelationships(customerId),
-          restService.getCaregiverRelationships(customerId))
-          .toList()
-          .map { it.flatten() }
+  private fun getAccountInfo(customerId: String) =
+      restService.getAccountInfo(customerId)
 
-  private fun getActiveManagedPatientRelationships(customerId: String) =
+  private fun getManagedRelationships(customerId: String) =
       restService.getManagedRelationships(customerId)
-          .flatMap { Observable.from(it) }
-          .filter { it.active }
           .toList()
+          .flatMap { relationships ->
+            val patientNumbers = relationships.map { it.patientNumber }.toList()
+            restService.getPatientProfiles(patientNumbers)
+                .toList()
+                .map { profiles ->
+                  relationships.map {
+                    UserRelationship(it, getMatchingProfile(it.patientNumber, profiles))
+                  }
+                }
+          }.flatMap { Observable.from(it) }
 
-  private fun zipWithProfilesAndAccountInfo(customerId: String, relationships: List<PatientRelationship>):
-      Observable<Triple<List<PatientRelationship>, List<PatientProfile>, AccountInfo>> {
-    val profiles = getProfiles(relationships)
-    val accountInfo = restService.getAccountInfo(customerId)
+  private fun getCaregivers(customerId: String) =
+      restService.getCaregiverRelationships(customerId).map {
+        val customerProfile = restService.getCustomerProfile(it.customerId)
+        UserRelationship(it, customerProfile)
+      }
 
-    return Observable.zip(Observable.just(relationships), profiles, accountInfo) {
-      relationships, profiles, accountInfo ->
-      Triple(relationships, profiles, accountInfo)
-    }
-  }
-
-  private fun getProfiles(relationships: List<PatientRelationship>) =
-      restService.getPatientProfiles(relationships.map { it.patientNumber })
-
-  private fun toUserRelationships(
-      customerId: String,
-      accountInfo: AccountInfo,
-      relationships: List<PatientRelationship>,
-      profiles: List<PatientProfile>)
-      : UserRelationships {
-    val relationshipsGroupedByManaged = groupRelationshipsByManaged(customerId, relationships)
-
-    val managedRelationships = relationshipsGroupedByManaged[true]?.map {
-      val profile = getMatchingProfile(customerId, profiles)
-      mapToUserRelationship(it, profile!!)
-    } ?: listOf()
-
-    val caregiverRelationships = relationshipsGroupedByManaged[false]?.map {
-      val profile = getMatchingProfile(customerId, profiles)
-      mapToUserRelationship(it, profile!!)
-    } ?: listOf()
-
-    return UserRelationships(accountInfo, managedRelationships, caregiverRelationships)
-  }
-
-  private fun groupRelationshipsByManaged(customerId: String, relationships: List<PatientRelationship>)
-      : Map<Boolean, List<PatientRelationship>> =
-      relationships.groupBy { it.customerId == customerId }
-
-  private fun mapToUserRelationship(relationship: PatientRelationship, profile: PatientProfile) =
-      UserRelationship(relationship, profile)
+  private fun getActiveManagedRelationships(customerId: String) =
+      getManagedRelationships(customerId).filter { it.active }
 
   private fun getMatchingProfile(customerId: String, profiles: List<PatientProfile>) =
       profiles.find { it.patientNumber == customerId }
