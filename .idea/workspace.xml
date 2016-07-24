@@ -3,11 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="eb750913-45c5-473f-90ec-07f1626575a1" name="Default" comment="Retrieve customer profile instead of patient profile for caregivers">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/example/command/AppService.kt" afterPath="$PROJECT_DIR$/src/main/java/com/example/command/AppService.kt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/example/command/RestService.kt" afterPath="$PROJECT_DIR$/src/main/java/com/example/command/RestService.kt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/example/controller/RelationshipController.kt" afterPath="$PROJECT_DIR$/src/main/java/com/example/controller/RelationshipController.kt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/com/example/domain/Domain.kt" afterPath="$PROJECT_DIR$/src/main/java/com/example/domain/Domain.kt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/com/example/command/AppServiceTest.kt" afterPath="$PROJECT_DIR$/src/test/java/com/example/command/AppServiceTest.kt" />
     </list>
     <ignored path="kotlinrest.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -1592,7 +1587,7 @@
       <workItem from="1468636797421" duration="675000" />
       <workItem from="1468894097599" duration="260000" />
       <workItem from="1468894376487" duration="1083000" />
-      <workItem from="1469318177915" duration="5436000" />
+      <workItem from="1469318177915" duration="5447000" />
     </task>
     <task id="LOCAL-00001" summary="add spring facet">
       <created>1468201211162</created>
@@ -1636,7 +1631,14 @@
       <option name="project" value="LOCAL" />
       <updated>1468202348360</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Retrieve customer profile instead of patient profile for caregivers">
+      <created>1469328840247</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1469328840247</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1672,7 +1674,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="32547000" />
+    <option name="totallyTimeSpent" value="32558000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1216" extended-state="6" />
