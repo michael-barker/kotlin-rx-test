@@ -41,8 +41,7 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
           .toBlocking()
           .first()
 
-  private fun getAccountInfo(customerId: String) =
-      restService.getAccountInfo(customerId)
+  private fun getAccountInfo(customerId: String) = restService.getAccountInfo(customerId)
 
   private fun getManagedRelationships(customerId: String): Observable<UserRelationship> =
       restService.getManagedRelationships(customerId)
@@ -50,9 +49,10 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
           .flatMap { relationships -> managedRelationshipsToUserRelationships(relationships) }
 
   private fun getCaregivers(customerId: String) =
-      restService.getCaregiverRelationships(customerId).map {
-        val customerProfile = restService.getCustomerProfile(it.customerId)
-        UserRelationship(it, customerProfile)
+      restService.getCaregiverRelationships(customerId).flatMap { relationship ->
+        restService.getCustomerProfile(relationship.customerId).map { customerProfile ->
+          UserRelationship(relationship, customerProfile)
+        }
       }
 
   private fun getActiveManagedRelationships(customerId: String) =

@@ -15,7 +15,8 @@ open class RestService() {
   fun getPatientProfiles(patientNumbers: List<String>): Observable<PatientProfile> =
       just(patientNumbers.map { PatientProfile(it, "$it name") }).flatMap { Observable.from(it) }
 
-  fun getCustomerProfile(customerId: String) = CustomerProfile(customerId, "$customerId name")
+  fun getCustomerProfile(customerId: String): Observable<CustomerProfile> =
+      Observable.just(CustomerProfile(customerId, "$customerId name"))
 
   fun getManagedRelationships(customerId: String): Observable<PatientRelationship> =
       just(listOf(
