@@ -1,29 +1,26 @@
 package com.example.command
 
-import com.example.domain.AccountInfo
-import com.example.domain.PatientProfile
-import com.example.domain.UserRelationship
-import com.example.domain.UserRelationships
+import com.example.domain.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import rx.Observable
 
 @Service
-open class AppService @Autowired constructor(val restService: RestService) {
+open class RelationshipService @Autowired constructor(val restService: RestService) {
+
+  val noCaregiverRelationships: Observable<UserRelationship> = Observable.from(listOf<UserRelationship>())
 
   fun getManagedUserRelationships(customerId: String) =
       toUserRelationships(
           getAccountInfo(customerId),
           getManagedRelationships(customerId),
-          emptyUserRelationshipList())
-
-  private fun emptyUserRelationshipList() = Observable.just(listOf<UserRelationship>()).flatMap { Observable.from(it) }
+          noCaregiverRelationships)
 
   fun getActiveManagedUserRelationships(customerId: String) =
       toUserRelationships(
           getAccountInfo(customerId),
           getActiveManagedRelationships(customerId),
-          emptyUserRelationshipList())
+          noCaregiverRelationships)
 
   fun getUserRelationships(customerId: String) =
       toUserRelationships(
@@ -47,19 +44,10 @@ open class AppService @Autowired constructor(val restService: RestService) {
   private fun getAccountInfo(customerId: String) =
       restService.getAccountInfo(customerId)
 
-  private fun getManagedRelationships(customerId: String) =
+  private fun getManagedRelationships(customerId: String): Observable<UserRelationship> =
       restService.getManagedRelationships(customerId)
           .toList()
-          .flatMap { relationships ->
-            val patientNumbers = relationships.map { it.patientNumber }.toList()
-            restService.getPatientProfiles(patientNumbers)
-                .toList()
-                .map { profiles ->
-                  relationships.map {
-                    UserRelationship(it, getMatchingProfile(it.patientNumber, profiles))
-                  }
-                }
-          }.flatMap { Observable.from(it) }
+          .flatMap { relationships -> managedRelationshipsToUserRelationships(relationships) }
 
   private fun getCaregivers(customerId: String) =
       restService.getCaregiverRelationships(customerId).map {
@@ -69,6 +57,18 @@ open class AppService @Autowired constructor(val restService: RestService) {
 
   private fun getActiveManagedRelationships(customerId: String) =
       getManagedRelationships(customerId).filter { it.active }
+
+  private fun managedRelationshipsToUserRelationships(relationships: List<PatientRelationship>)
+      : Observable<UserRelationship> {
+    val patientNumbers = relationships.map { it.patientNumber }.toList()
+    return restService.getPatientProfiles(patientNumbers)
+        .toList()
+        .map { profiles ->
+          relationships.map {
+            UserRelationship(it, getMatchingProfile(it.patientNumber, profiles))
+          }
+        }.flatMap { Observable.from(it) }
+  }
 
   private fun getMatchingProfile(customerId: String, profiles: List<PatientProfile>) =
       profiles.find { it.patientNumber == customerId }

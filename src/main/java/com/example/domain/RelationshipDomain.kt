@@ -28,7 +28,6 @@ class UserRelationship private constructor(relationship: PatientRelationship) {
   constructor(relationship: PatientRelationship, customerProfile: CustomerProfile?) : this(relationship) {
     this.name = customerProfile?.name
   }
-
 }
 
 class UserRelationships(

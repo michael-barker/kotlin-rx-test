@@ -9,14 +9,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 
 @RunWith(SpringJUnit4ClassRunner::class)
 @SpringApplicationConfiguration(KotlinRxTestApplication::class)
-open class AppServiceTest() {
+open class RelationshipServiceTest() {
 
   @Autowired
-  lateinit var appService: AppService
+  lateinit var relationshipService: RelationshipService
 
   @Test
   fun getUserRelationships() {
-    val userRelationships = appService.getUserRelationships("1111")
+    val userRelationships = relationshipService.getUserRelationships("1111")
 
     assert(userRelationships.managedRelationships.size == 3)
     assert(userRelationships.caregiverRelationships.size == 1)
@@ -24,7 +24,7 @@ open class AppServiceTest() {
 
   @Test
   fun getActiveManagedRelationships() {
-    val userRelationships = appService.getActiveManagedUserRelationships("1111")
+    val userRelationships = relationshipService.getActiveManagedUserRelationships("1111")
 
     assert(userRelationships.managedRelationships.size == 2)
     assert(userRelationships.caregiverRelationships.size == 0)
@@ -32,7 +32,7 @@ open class AppServiceTest() {
 
   @Test
   fun getManagedRelationships() {
-    val userRelationships = appService.getManagedUserRelationships("1111")
+    val userRelationships = relationshipService.getManagedUserRelationships("1111")
 
     assert(userRelationships.managedRelationships.size == 3)
     assert(userRelationships.caregiverRelationships.size == 0)
