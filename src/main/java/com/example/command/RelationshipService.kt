@@ -64,8 +64,8 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
     return restService.getPatientProfiles(patientNumbers)
         .toList()
         .map { profiles ->
-          relationships.map {
-            UserRelationship(it, getMatchingProfile(it.patientNumber, profiles))
+          relationships.map { relationship ->
+            UserRelationship(relationship, getMatchingProfile(relationship.patientNumber, profiles))
           }
         }.flatMap { Observable.from(it) }
   }
