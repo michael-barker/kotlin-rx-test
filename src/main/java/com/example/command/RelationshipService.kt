@@ -46,14 +46,7 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
   private fun getManagedRelationships(customerId: String): Observable<UserRelationship> =
       restService.getManagedRelationships(customerId)
           .toList()
-          .flatMap { relationships -> managedRelationshipsToUserRelationships(relationships) }
-
-  private fun getCaregivers(customerId: String) =
-      restService.getCaregiverRelationships(customerId).flatMap { relationship ->
-        restService.getCustomerProfile(relationship.customerId).map { customerProfile ->
-          UserRelationship(relationship, customerProfile)
-        }
-      }
+          .flatMap { managedRelationshipsToUserRelationships(it) }
 
   private fun getActiveManagedRelationships(customerId: String) =
       getManagedRelationships(customerId).filter { it.active }
@@ -69,6 +62,16 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
           }
         }.flatMap { Observable.from(it) }
   }
+
+  private fun getCaregivers(customerId: String) =
+      restService.getCaregiverRelationships(customerId)
+          .flatMap { caregiverToUserRelationship(it) }
+
+  private fun caregiverToUserRelationship(relationship: PatientRelationship) =
+      getCustomerProfile(relationship.customerId)
+          .map { UserRelationship(relationship, it) }
+
+  private fun getCustomerProfile(customerId: String) = restService.getCustomerProfile(customerId)
 
   private fun getMatchingProfile(customerId: String, profiles: List<PatientProfile>) =
       profiles.find { it.patientNumber == customerId }
