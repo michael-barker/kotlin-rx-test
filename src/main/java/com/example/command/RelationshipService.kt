@@ -6,23 +6,23 @@ import org.springframework.stereotype.Service
 import rx.Observable
 
 @Service
-open class RelationshipService @Autowired constructor(val restService: RestService) {
+open class RelationshipService @Autowired constructor(val relationshipService: RestService) {
 
   val noCaregiverRelationships: Observable<UserRelationship> = Observable.from(listOf<UserRelationship>())
 
-  fun getManagedUserRelationships(customerId: String) =
+  fun getManagedUserRelationships(customerId: String): UserRelationships =
       toUserRelationships(
           getAccountInfo(customerId),
           getManagedRelationships(customerId),
           noCaregiverRelationships)
 
-  fun getActiveManagedUserRelationships(customerId: String) =
+  fun getActiveManagedUserRelationships(customerId: String): UserRelationships =
       toUserRelationships(
           getAccountInfo(customerId),
           getActiveManagedRelationships(customerId),
           noCaregiverRelationships)
 
-  fun getUserRelationships(customerId: String) =
+  fun getUserRelationships(customerId: String): UserRelationships =
       toUserRelationships(
           getAccountInfo(customerId),
           getManagedRelationships(customerId),
@@ -31,8 +31,7 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
   private fun toUserRelationships(
       accountInfo: Observable<AccountInfo>,
       managedRelationships: Observable<UserRelationship>,
-      caregivers: Observable<UserRelationship>)
-      : UserRelationships =
+      caregivers: Observable<UserRelationship>) =
       Observable.zip(
           accountInfo,
           managedRelationships.toList(),
@@ -41,10 +40,10 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
           .toBlocking()
           .first()
 
-  private fun getAccountInfo(customerId: String) = restService.getAccountInfo(customerId)
+  private fun getAccountInfo(customerId: String) = relationshipService.getAccountInfo(customerId)
 
   private fun getManagedRelationships(customerId: String): Observable<UserRelationship> =
-      restService.getManagedRelationships(customerId)
+      relationshipService.getManagedRelationships(customerId)
           .toList()
           .flatMap { managedRelationshipsToUserRelationships(it) }
 
@@ -54,7 +53,7 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
   private fun managedRelationshipsToUserRelationships(relationships: List<PatientRelationship>)
       : Observable<UserRelationship> {
     val patientNumbers = relationships.map { it.patientNumber }.toList()
-    return restService.getPatientProfiles(patientNumbers)
+    return relationshipService.getPatientProfiles(patientNumbers)
         .toList()
         .map { profiles ->
           relationships.map { relationship ->
@@ -64,14 +63,14 @@ open class RelationshipService @Autowired constructor(val restService: RestServi
   }
 
   private fun getCaregivers(customerId: String) =
-      restService.getCaregiverRelationships(customerId)
+      relationshipService.getCaregiverRelationships(customerId)
           .flatMap { caregiverToUserRelationship(it) }
 
   private fun caregiverToUserRelationship(relationship: PatientRelationship) =
       getCustomerProfile(relationship.customerId)
           .map { UserRelationship(relationship, it) }
 
-  private fun getCustomerProfile(customerId: String) = restService.getCustomerProfile(customerId)
+  private fun getCustomerProfile(customerId: String) = relationshipService.getCustomerProfile(customerId)
 
   private fun getMatchingProfile(customerId: String, profiles: List<PatientProfile>) =
       profiles.find { it.patientNumber == customerId }
